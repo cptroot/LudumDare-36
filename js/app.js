@@ -47,7 +47,8 @@ function updatePhysics() {
     // Copy coordinates from Cannon.js to Three.js
     mesh.position.copy(body.position);
     mesh.quaternion.copy(body.quaternion);
-    body.applyLocalForce(new CANNON.Vec3(0, 1, 0), new CANNON.Vec3(0, 0, 1));
+    body.applyLocalForce(new CANNON.Vec3(0, 0.5, 0), new CANNON.Vec3(0, 0, 1));
+    body.applyLocalForce(new CANNON.Vec3(0, -0.5, 0), new CANNON.Vec3(0, 0, -1));
 }
 
 function render() {

@@ -5,7 +5,7 @@ camera, scene, renderer, geometry, material, mesh, floor_body, floor_mesh;
 var camera_pos = {
     x: 0,
     y: 0,
-    z: 5,
+    z: 3,
 };
 
 var camera_rot = {
@@ -13,6 +13,10 @@ var camera_rot = {
 }
 
 var canvas;
+
+var holding = true;
+var held_mesh, held_body;
+var is_colliding = true;
 
 function initCannon() {
     world = new CANNON.World();
@@ -34,6 +38,13 @@ function initCannon() {
     body.angularVelocity.set(0,10,0);
     body.angularDamping = 0.5;
     world.addBody(body);
+    shape = new CANNON.Box(new CANNON.Vec3(1,1,1));
+    mass = 1;
+    held_body = new CANNON.Body({
+        mass: 1
+    });
+    held_body.position.set(0, 0, 0);
+    held_body.addShape(shape);
 }
 
 function initThree() {
@@ -50,6 +61,11 @@ function initThree() {
     material = new THREE.MeshBasicMaterial( { color: 0x00ff00, wireframe: true } );
     floor_mesh = new THREE.Mesh( geometry, material );
     scene.add( floor_mesh );
+
+    geometry = new THREE.BoxGeometry(2, 2, 2);
+    material = new THREE.MeshBasicMaterial( { color: 0x0000ff, wireframe: true } );
+    held_mesh = new THREE.Mesh( geometry, material );
+    scene.add( held_mesh );
 
     renderer = new THREE.WebGLRenderer();
     renderer.setSize( window.innerWidth, window.innerHeight );
@@ -70,8 +86,10 @@ function initInput() {
     }
 
     document.addEventListener('mousemove', mousemove);
-}
 
+    document.addEventListener('mousedown', mousedown);
+    document.addEventListener('mouseup', mouseup);
+}
 
 var keyboard = {};
 var old_keyboard = {};
@@ -90,6 +108,22 @@ function mousemove(e) {
         document.mozPointerLockElement === canvas) {
         camera.rotation.y -= e.movementX / sensitivity;
         camera.rotation.x -= e.movementY / sensitivity;
+    }
+}
+
+function mousedown(e) {
+}
+function mouseup(e) {
+    if (!holding) {
+        // Cast a ray through the world
+        // Find the object
+        // Pick up the object
+    } else {
+        if (!is_colliding) {
+            world.addBody(held_body);
+            held_body = null;
+            holding = false;
+        }
     }
 }
 
@@ -134,6 +168,37 @@ function updatePhysics() {
     camera.position.x = camera_pos.x;
     camera.position.y = camera_pos.y;
     camera.position.z = camera_pos.z;
+
+    if (holding) {
+        held_mesh.rotation.copy(camera.rotation);
+        held_mesh.rotation.x = 0;
+        var offset = new THREE.Vector3(0, 0, -3);
+        offset.applyEuler(camera.rotation);
+        held_mesh.position.copy(camera.position);
+        held_mesh.position.add(offset);
+        held_body.position.set(held_mesh.position.x, held_mesh.position.y, held_mesh.position.z);
+        held_body.quaternion.setFromEuler(camera.rotation.x, camera.rotation.y, camera.rotation.z, "YXZ");
+
+        // Check if held_mesh is colliding:
+        // Add held_body to the world
+        world.addBody(held_body);
+        is_colliding = false;
+        var result = [];
+        for (var body_iter in world.bodies) {
+            if (body_iter == held_body) { continue; }
+            world.narrowphase.getContacts([held_body], [world.bodies[1]], world, result, [], [], []);
+            if (result.length) {
+                is_colliding = true;
+            }
+        }
+
+        if (is_colliding) {
+            held_mesh.material.color.set(0x4444ff);
+        } else {
+            held_mesh.material.color.set(0x0000ff);
+        }
+        world.removeBody(held_body);
+    }
 
     var old_keyboard = Object.create(keyboard);
 }

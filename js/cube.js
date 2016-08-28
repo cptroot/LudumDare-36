@@ -1,4 +1,5 @@
-function Cube(length = 1,
+function Cube(world,
+              length = 1,
               width = 1,
               height = 1,
               mass = 1,
@@ -11,7 +12,7 @@ function Cube(length = 1,
     this.height = height;
 
     // physics stuff
-    cube = new CANNON.Box(new CANNON.Vec3(length, width, height));
+    var cube = new CANNON.Box(new CANNON.Vec3(length, width, height));
     this.physicsBody = new CANNON.Body({
         mass: mass,
         position: new CANNON.Vec3(pos_x, pos_y, pos_z)
@@ -20,7 +21,20 @@ function Cube(length = 1,
     world.addBody(this.physicsBody);
 
     // display stuff
-    geometry = new THREE.BoxGeometry(length, width, height);
-    material = new THREE.MeshBasicMaterial( { color: 0x0000ff, wireframe: true } );
+    var geometry = new THREE.BoxGeometry(length, width, height);
+    var material = new THREE.MeshBasicMaterial( { color: 0x0000ff, wireframe: true } );
     this.viewBody = new THREE.Mesh( geometry, material );
+
+    this.synchronize = function() {
+        this.viewBody.position.copy(this.physicsBody.position);
+        mesh.quaternion.copy(body.quaternion);
+    }
+
+    this.addToWorld = function() {
+
+    }
+
+    this.removeFromWorld = function() {
+
+    }
 }

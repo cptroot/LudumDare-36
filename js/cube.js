@@ -7,6 +7,7 @@ function Cube(world,
               pos_y = 0,
               pos_z = 0,
               color 0xff0000) {
+    this.world = world;
     this.length = length;
     this.width = width;
     this.height = height;
@@ -31,10 +32,10 @@ function Cube(world,
     }
 
     this.addToWorld = function() {
-
+        this.world.addBody(this.physicsBody);
     }
 
     this.removeFromWorld = function() {
-
+        this.world.removeBody(this.physicsBody);
     }
 }
